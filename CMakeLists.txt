@@ -44,4 +44,3 @@ install(TARGETS SPECT2D DESTINATION bin)
 
 # Optionally create a build directory for output
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-

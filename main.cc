@@ -4,6 +4,8 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 #include "G4String.hh"
+#include "G4UIExecutive.hh"
+#include "G4VisExecutive.hh"            // ← Added for visualization
 
 #include "DetectorConstruction.hh"
 #include "PrimaryGeneratorAction.hh"
@@ -13,29 +15,32 @@
 #include "SteppingAction.hh"
 #include "SimMessenger.hh"
 
-int main(int argc, char** argv) {
-    if (argc != 2) {
-        G4cerr << "Usage: " << argv[0] << " <macroFile.mac>" << G4endl;
-        return 1;
+int main(int argc, char** argv)
+{
+    // UI executive (for interactive mode)
+    G4UIExecutive* ui = nullptr;
+    const bool batchMode = (argc > 1);
+    if (!batchMode) {
+        ui = new G4UIExecutive(argc, argv);
     }
 
-    // Extract the base name (no path, no extension)
-    std::string macroPath(argv[1]);
-    size_t slash = macroPath.find_last_of("/\\");
-    std::string filename = (slash == std::string::npos
-                            ? macroPath
-                            : macroPath.substr(slash + 1));
-    std::string base = filename;
-    size_t dot = filename.rfind('.');
-    if (dot != std::string::npos && filename.substr(dot) == ".mac") {
-        base = filename.substr(0, dot);
+    // Determine macro file & base name
+    G4String macroFile;
+    G4String base;
+    if (batchMode) {
+        macroFile = argv[1];
+        std::string fname = macroFile;
+        auto slash = fname.find_last_of("/\\");
+        if (slash != std::string::npos) fname = fname.substr(slash + 1);
+        auto dot = fname.rfind('.');
+        base = (dot != std::string::npos ? fname.substr(0, dot) : fname);
+    } else {
+        base = "interactive";
     }
 
     // Prepare output directory
     const std::string outDir = "./Output_Root";
     mkdir(outDir.c_str(), 0755);
-
-    // Build full ROOT filename
     G4String outFile = outDir + "/" + base + ".root";
 
     // --- Set up the run manager
@@ -65,15 +70,28 @@ int main(int argc, char** argv) {
     // Messenger for UI commands (keep alive)
     static auto* simMessenger = new SimMessenger(detector, genAction);
 
-    // Initialize Geant4 kernel
+    // Initialize Geant4 kernel (build geometry, physics, etc.)
     runManager->Initialize();
 
-    // Execute the macro
-    G4UImanager::GetUIpointer()->ApplyCommand(
-        "/control/execute " + G4String(argv[1])
-    );
+    // --- Visualization setup (NEW)
+    auto* visManager = new G4VisExecutive;
+    visManager->Initialize();
 
-    delete runManager;
+    // UI manager: execute macros
+    auto* UImanager = G4UImanager::GetUIpointer();
+    if (batchMode) {
+        UImanager->ApplyCommand("/control/execute " + G4String(macroFile));
+    } else {
+        // make sure you have an "init_vis.mac" in your working dir
+        UImanager->ApplyCommand("/control/execute init_vis.mac");
+        ui->SessionStart();
+        delete ui;
+    }
+
+    // Clean up
+    delete visManager;       // ← Remove visualization manager
+    delete runManager;       // ← Remove run manager
+
     return 0;
 }
 
