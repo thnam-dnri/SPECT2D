@@ -1,0 +1,5 @@
+#! /bin/bash
+#PBS -q BS
+
+cd ~/Geant4/build/
+./SPECT2D ../run_mac_files_xy/run_x_-22.68_y_14.28_zoff_100.0.mac

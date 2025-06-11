@@ -1,0 +1,3 @@
+/simulation/offset  31.08  -0.84  100.0 mm
+/run/initialize
+/run/beamOn        10000000
