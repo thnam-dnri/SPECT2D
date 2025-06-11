@@ -31,7 +31,7 @@ def submit_check(keyword):
 
 
 def main():
-    directory = "."
+    directory = "./mac_sh"
     files = os.listdir(directory)
     files.sort()
 

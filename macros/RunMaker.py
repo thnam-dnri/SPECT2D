@@ -4,12 +4,12 @@ import os
 def main():
     # Scan parameters
     step_size = 1.68  # mm
-    x_steps = 40
-    y_steps = 20
-    z_offset = 100.0  # mm
+    x_steps = 4
+    y_steps = 2
+    z_offset = 0.0  # mm
 
     # Output directory for .mac and .sh files
-    output_dir = "run_mac_files_xy"
+    output_dir = "mac_sh"
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate symmetric position lists
@@ -32,7 +32,7 @@ def main():
             with open(mac_path, 'w') as mac_file:
                 mac_file.write(f"/simulation/offset  {x_str}  {y_str}  {z_str} mm\n")
                 mac_file.write("/run/initialize\n")
-                mac_file.write("/run/beamOn        10000000\n")
+                mac_file.write("/run/beamOn        100000000\n")
 
             # Build .sh filename and path
             sh_filename = mac_filename.replace('.mac', '.sh')
@@ -42,7 +42,7 @@ def main():
             with open(sh_path, 'w') as sh_file:
                 sh_file.write("#! /bin/bash\n")
                 sh_file.write("#PBS -q BS\n\n")
-                sh_file.write("cd ~/Geant4/build/\n")
+                sh_file.write("cd ~/Geant4/SPEC2D/build/\n")
                 sh_file.write(f"./SPECT2D ../{output_dir}/{mac_filename}\n")
 
             # Make the shell script executable
