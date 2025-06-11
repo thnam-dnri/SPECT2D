@@ -1,0 +1,7 @@
+/vis/open
+/vis/drawVolume
+/vis/viewer/set/viewpointThetaPhi 60 60
+/vis/viewer/zoom 1.5
+/vis/scene/add/trajectories smooth
+/vis/scene/add/hits
+/vis/scene/endOfEventAction accumulate
