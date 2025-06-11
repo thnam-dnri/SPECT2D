@@ -4,8 +4,8 @@ import os
 def main():
     # Scan parameters
     step_size = 1.68  # mm
-    x_steps = 4
-    y_steps = 2
+    x_steps = 40
+    y_steps = 20
     z_offset = 0.0  # mm
 
     # Output directory for .mac and .sh files
@@ -32,7 +32,7 @@ def main():
             with open(mac_path, 'w') as mac_file:
                 mac_file.write(f"/simulation/offset  {x_str}  {y_str}  {z_str} mm\n")
                 mac_file.write("/run/initialize\n")
-                mac_file.write("/run/beamOn        100000000\n")
+                mac_file.write("/run/beamOn        1000000\n")
 
             # Build .sh filename and path
             sh_filename = mac_filename.replace('.mac', '.sh')
