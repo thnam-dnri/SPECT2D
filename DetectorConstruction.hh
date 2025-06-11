@@ -33,7 +33,7 @@ private:
     void SetupGeometry();     // not used separately, logic is in Construct()
 
     // --- User‐configurable offset of the phantom (in world coordinates) ---
-    G4ThreeVector    fPhantomOffset{0, 0, 20*cm};
+    G4ThreeVector    fPhantomOffset{0, 0, 0*cm};
 
     // --- Predefined materials (if you want to cache them) ---
     G4Material* air;

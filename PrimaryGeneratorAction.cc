@@ -22,7 +22,8 @@ static const G4double kBodyZ = 1.5*cm;
 
 PrimaryGeneratorAction::PrimaryGeneratorAction()
  : G4VUserPrimaryGeneratorAction(),
-   fParticleGun(nullptr),fSourceOffset(0,0,20*cm)
+   fParticleGun(nullptr),
+   fSourceOffset(0, 0, 0)  // Default source position now at origin
 {
     fParticleGun = new G4ParticleGun(1);
     fParticleGun->SetParticleDefinition(G4Gamma::Definition());
@@ -82,15 +83,14 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
     }
 
     fParticleGun->SetParticlePosition(pos);
-// Sample isotropic direction in the lower hemisphere (Z < 0)
 
-	G4ThreeVector dir;
-	do {
-    	dir = G4RandomDirection();  // uniformly on full sphere
-	} while (dir.z() > 0);          // reject if not in lower hemisphere
-	fParticleGun->SetParticleMomentumDirection(dir);
-//    fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.0, 0.0, -1.0));
-
+    // Sample isotropic direction in the lower hemisphere (Z < 0)
+    G4ThreeVector dir;
+    do {
+        dir = G4RandomDirection();  // uniformly on full sphere
+    } while (dir.z() > 0);          // reject if not in lower hemisphere
+    fParticleGun->SetParticleMomentumDirection(dir);
 
     fParticleGun->GeneratePrimaryVertex(anEvent);
 }
+
