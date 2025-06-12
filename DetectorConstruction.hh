@@ -36,7 +36,7 @@ private:
 
     // --- User‐configurable offset & rotation of the phantom ---
     G4ThreeVector    fPhantomOffset{0, 0, 0*cm};
-    G4double         fPhantomRotation{0.0};   ///< rotation around Z
+    G4double         fPhantomRotation{0.0};   ///< rotation around X
 
     // --- Predefined materials ---
     G4Material* air;

@@ -16,6 +16,7 @@
 
 DetectorConstruction::DetectorConstruction()
  : G4VUserDetectorConstruction(),
+   fPhantomRotation(0.0),
    air(nullptr),
    csiTl(nullptr),
    teflon(nullptr),
@@ -25,8 +26,7 @@ DetectorConstruction::DetectorConstruction()
    worldPV(nullptr),
    detectorLV(nullptr),
    phantomLV(nullptr),
-   collimatorLV(nullptr),
-   fPhantomRotation(0.0)
+   collimatorLV(nullptr)
 {
     // (Optional) You could call DefineMaterials() here if you wanted to cache materials.
 }

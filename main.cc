@@ -68,8 +68,8 @@ int main(int argc, char** argv)
     runManager->SetUserAction(steppingAction);
 
     // Messenger for UI commands (keep alive)
-    static auto* simMessenger = new SimMessenger(detector, genAction);
-
+//    static auto* simMessenger = new SimMessenger(detector, genAction);
+	(void) new SimMessenger(detector, genAction);
     // Initialize Geant4 kernel (build geometry, physics, etc.)
     runManager->Initialize();
 
