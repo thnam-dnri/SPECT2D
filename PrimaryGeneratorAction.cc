@@ -10,6 +10,7 @@
 #include <cmath>
 #include "G4RandomDirection.hh"
 #include "G4RotationMatrix.hh"
+#include "G4PhysicalConstants.hh"   // for twopi
 
 // Thyroid ellipsoid half-axes and center
 static const G4double kThyX = 0.4*cm;
@@ -90,13 +91,33 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
     fParticleGun->SetParticlePosition(pos);
 
-    // Sample isotropic direction in lower hemisphere
-//    G4ThreeVector dir;
-//    do {
-//        dir = G4RandomDirection();
-//    } while(dir.z() > 0);
-//    fParticleGun->SetParticleMomentumDirection(dir);
+    	// Sample isotropic direction in lower hemisphere
+/*
+    G4ThreeVector dir;
+    do {
+        dir = G4RandomDirection();
+    } while(dir.z() > 0);
+    fParticleGun->SetParticleMomentumDirection(dir);
+*/
+	// Emitting in the negative Z direction
     fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0.0, 0.0, -1.0));
+ 
+ 	// Sample direction within a 45° cone around the –Z axis
+/*	G4double halfAngle = 30 * deg;
+	G4double cosA = std::cos(halfAngle);
+	G4double cosTheta = cosA + (1.0 - cosA) * G4UniformRand();  // uniform in solid angle
+	G4double sinTheta = std::sqrt(1.0 - cosTheta*cosTheta);
+	G4double phi      = twopi * G4UniformRand();                // twopi from G4PhysicalConstants
+
+	G4ThreeVector dir(
+	  sinTheta * std::cos(phi),
+	  sinTheta * std::sin(phi),
+	  -cosTheta            // negative to point down the –Z axis
+	);
+	dir = dir.unit();  // just in case
+	fParticleGun->SetParticleMomentumDirection(dir);
+*/
+
     fParticleGun->GeneratePrimaryVertex(anEvent);
 }
 

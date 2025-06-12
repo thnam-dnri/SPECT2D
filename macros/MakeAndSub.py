@@ -19,7 +19,7 @@ def main():
     # Configuration
     jobmax   = 70        # max jobs allowed in queue "BS"
     myjobmax = 50        # max jobs allowed for user
-    waittime = 30        # seconds between queue checks
+    waittime = 3        # seconds between queue checks
 
     # Scan parameters
     step_size = 1.68     # mm
@@ -28,7 +28,7 @@ def main():
     z_offset  = 0.0      # mm
 
     # Rotation angles (0 to 180 by 45)
-    rotation_angles = list(range(0, 181, 45))
+    rotation_angles = list(range(0, 181, 1))
 
     # Directories
     base_dir   = os.path.abspath(os.path.dirname(__file__))
@@ -57,7 +57,7 @@ def main():
                     mac_file.write(f"/simulation/offset  {x_str}  {y_str}  {z_str} mm\n")
                     mac_file.write(f"/simulation/rotate  {rot_str}  deg\n")
                     mac_file.write("/run/initialize\n")
-                    mac_file.write("/run/beamOn        100000\n")
+                    mac_file.write("/run/beamOn        10000\n")
 
                 # Create .sh file
                 sh_filename = mac_filename.replace('.mac', '.sh')
@@ -93,7 +93,7 @@ def main():
 
         os.system(f"qsub {sh_path}")
         submitted += 1
-        time.sleep(1)
+        time.sleep(0)
 
     print(f"\nSubmitted {submitted} jobs to the queue")
 
