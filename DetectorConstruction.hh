@@ -15,9 +15,12 @@ public:
     ~DetectorConstruction() override;
 
     /// Set an offset to translate the phantom in (x, y, z). 
-    /// Default was {0, 0, 20*cm}.
     void SetPhantomOffset(const G4ThreeVector& off) { fPhantomOffset = off; }
-	const G4ThreeVector& GetPhantomOffset() const { return fPhantomOffset; }
+    const G4ThreeVector& GetPhantomOffset() const { return fPhantomOffset; }
+
+    /// Set a rotation angle (around Z) for the phantom
+    void SetPhantomRotation(G4double angle);
+
     /// Build the world, phantom, detector, and collimator.
     G4VPhysicalVolume* Construct() override;
 
@@ -25,17 +28,17 @@ public:
     void ConstructSDandField() override;
 
     /// Return a const reference to the vector of all pinhole centers
-    /// (in detector‐coordinates). Use this in EventAction to write (x,y).
     const std::vector<G4ThreeVector>& GetPinholeCenters() const { return fPinholeCenters; }
 
 private:
-    void DefineMaterials();   // not used in this version, but kept for future expansion
-    void SetupGeometry();     // not used separately, logic is in Construct()
+    void DefineMaterials();
+    void SetupGeometry();
 
-    // --- User‐configurable offset of the phantom (in world coordinates) ---
+    // --- User‐configurable offset & rotation of the phantom ---
     G4ThreeVector    fPhantomOffset{0, 0, 0*cm};
+    G4double         fPhantomRotation{0.0};   ///< rotation around Z
 
-    // --- Predefined materials (if you want to cache them) ---
+    // --- Predefined materials ---
     G4Material* air;
     G4Material* csiTl;
     G4Material* teflon;
@@ -46,9 +49,9 @@ private:
     G4LogicalVolume* worldLV;
     G4VPhysicalVolume* worldPV;
 
-    // --- Detector pointers (4×4 crystal array) ---
+    // --- Detector pointers ---
     G4LogicalVolume* detectorLV;
-    std::vector<G4LogicalVolume*> crystalLVs;  // will not actually store each crystal separately here
+    std::vector<G4LogicalVolume*> crystalLVs;
 
     // --- Phantom pointers ---
     G4LogicalVolume* phantomLV;
@@ -56,8 +59,9 @@ private:
     // --- Collimator pointers ---
     G4LogicalVolume* collimatorLV;
 
-    // --- Storage for all 16 pinhole centers (in detector coordinates) ---
+    // --- Storage for all 16 pinhole centers ---
     std::vector<G4ThreeVector> fPinholeCenters;
 };
 
 #endif  // DETECTORCONSTRUCTION_HH
+

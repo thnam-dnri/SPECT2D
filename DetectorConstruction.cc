@@ -12,6 +12,7 @@
 #include "G4SDManager.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4VisAttributes.hh"
+#include "G4RotationMatrix.hh"
 
 DetectorConstruction::DetectorConstruction()
  : G4VUserDetectorConstruction(),
@@ -24,23 +25,28 @@ DetectorConstruction::DetectorConstruction()
    worldPV(nullptr),
    detectorLV(nullptr),
    phantomLV(nullptr),
-   collimatorLV(nullptr)
+   collimatorLV(nullptr),
+   fPhantomRotation(0.0)
 {
     // (Optional) You could call DefineMaterials() here if you wanted to cache materials.
 }
 
 DetectorConstruction::~DetectorConstruction() {}
 
+void DetectorConstruction::SetPhantomRotation(G4double angle) {
+    fPhantomRotation = angle;
+}
+
 G4VPhysicalVolume* DetectorConstruction::Construct() {
     // ------------------------------------------------------------
     // User-defined parameters for detector geometry
     // ------------------------------------------------------------
     const G4double kZOffset             = -10 * cm;
-    const G4double kCrystalThickness    = 30 * mm;
-    const G4double kReflectorThickness  = 30 * mm;
+    const G4double kCrystalThickness    = 20 * mm;
+    const G4double kReflectorThickness  = 20 * mm;
     const G4double kCollimatorThickness = 5  * cm;
-//    const G4double kPinholeRadius       = 0.84 * mm; // radius for 1.68 mm diameter
-    const G4double kPinholeRadius       = 1 * mm; // radius for 2 mm diameter
+    const G4double kPinholeRadius       = 0.84 * mm; // radius for 1.68 mm diameter
+
     // ------------------------------------------------------------
     // 1) Define / fetch materials via NIST database
     // ------------------------------------------------------------
@@ -67,6 +73,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
         0
     );
 
+    // Prepare rotation
+    G4RotationMatrix* rot = new G4RotationMatrix();
+    rot->rotateX(fPhantomRotation);
+
     // ------------------------------------------------------------
     // 3) Multi‐organ phantom: body + thyroid at fPhantomOffset
     // ------------------------------------------------------------
@@ -75,7 +85,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4Ellipsoid* bodyS = new G4Ellipsoid("BodyS", bodyX, bodyY, bodyZ);
     G4LogicalVolume* bodyLV = new G4LogicalVolume(bodyS, water, "BodyLV");
     new G4PVPlacement(
-        nullptr,
+        rot,
         fPhantomOffset,
         bodyLV,
         "BodyPV",
@@ -88,11 +98,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     bodyLV->SetVisAttributes(bodyVis);
 
     // 3b) Thyroid (smaller ellipsoid)
-    G4double thyX=0.4*cm, thyY=0.4*cm, thyZ=0.2*cm;
+    G4double thyX = 0.4*cm, thyY = 0.4*cm, thyZ = 0.2*cm;
     G4Ellipsoid* thyroidS = new G4Ellipsoid("ThyroidS", thyX, thyY, thyZ);
     G4LogicalVolume* thyroidLV = new G4LogicalVolume(thyroidS, water, "ThyroidLV");
     new G4PVPlacement(
-        nullptr,
+        rot,
         fPhantomOffset,
         thyroidLV,
         "ThyroidPV",
@@ -109,7 +119,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4LogicalVolume* testBoxLV = new G4LogicalVolume(testBoxS, water, "TestBoxLV");
     G4ThreeVector boxGlobalPos = fPhantomOffset + G4ThreeVector(0.8*cm,0,0);
     new G4PVPlacement(
-        nullptr,
+        rot,
         boxGlobalPos,
         testBoxLV,
         "TestBoxPV",
@@ -124,19 +134,19 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     // ------------------------------------------------------------
     // 4) Detector array: 4×4 CsI(Tl) crystals + Teflon reflector
     // ------------------------------------------------------------
-    const G4int nX=4, nY=4;
-    const G4double cX=3.16*mm, cY=3.16*mm;
-    const G4double gap=0.2*mm;
+    const G4int nX = 4, nY = 4;
+    const G4double cX = 3.16*mm, cY = 3.16*mm;
+    const G4double gap = 0.2*mm;
     const G4double detX = nX*(cX+gap)-gap;
     const G4double detY = nY*(cY+gap)-gap;
 
     // 4a) Reflector
     G4VSolid* reflS = new G4Box("ReflectorFull", detX/2, detY/2, kReflectorThickness/2);
     G4Box* holeS = new G4Box("Hole", cX/2, cY/2, kCrystalThickness/2);
-    for(int i=0;i<nX;++i) for(int j=0;j<nY;++j) {
-        G4double x=-detX/2 + cX/2 + i*(cX+gap);
-        G4double y=-detY/2 + cY/2 + j*(cY+gap);
-        reflS=new G4SubtractionSolid("ReflectorSub", reflS, holeS, nullptr, G4ThreeVector(x,y,0));
+    for (G4int i = 0; i < nX; ++i) for (G4int j = 0; j < nY; ++j) {
+        G4double x = -detX/2 + cX/2 + i*(cX+gap);
+        G4double y = -detY/2 + cY/2 + j*(cY+gap);
+        reflS = new G4SubtractionSolid("ReflectorSub", reflS, holeS, nullptr, G4ThreeVector(x,y,0));
     }
     G4LogicalVolume* reflLV = new G4LogicalVolume(reflS, teflon, "ReflectorLV");
     new G4PVPlacement(
@@ -151,18 +161,19 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     G4VisAttributes* reflVis = new G4VisAttributes(G4Colour(1,1,1,0.5)); reflVis->SetForceSolid(true);
     reflLV->SetVisAttributes(reflVis);
 
+    // Continue with collimator/crystals unchanged...
     // ------------------------------------------------------------
     // 5) Collimator: lead block with pinholes
     // ------------------------------------------------------------
     G4Box* colBase = new G4Box("CollimatorBase", detX/2+2.5*cm, detY/2+2.5*cm, kCollimatorThickness/2);
     G4Tubs* pinS = new G4Tubs("Pinhole", 0, kPinholeRadius, kCollimatorThickness/2+1*mm, 0, 360*deg);
-    G4VSolid* colS=colBase;
+    G4VSolid* colS = colBase;
     fPinholeCenters.clear();
-    for(int i=0;i<nX;++i) for(int j=0;j<nY;++j) {
-        G4double x=-detX/2 + cX/2 + i*(cX+gap);
-        G4double y=-detY/2 + cY/2 + j*(cY+gap);
+    for (G4int i = 0; i < nX; ++i) for (G4int j = 0; j < nY; ++j) {
+        G4double x = -detX/2 + cX/2 + i*(cX+gap);
+        G4double y = -detY/2 + cY/2 + j*(cY+gap);
         fPinholeCenters.emplace_back(x,y,0);
-        colS=new G4SubtractionSolid("CollimatorHoles", colS, pinS, nullptr, G4ThreeVector(x,y,0));
+        colS = new G4SubtractionSolid("CollimatorHoles", colS, pinS, nullptr, G4ThreeVector(x,y,0));
     }
     G4LogicalVolume* colLV = new G4LogicalVolume(colS, lead, "CollimatorLV");
     new G4PVPlacement(
@@ -181,9 +192,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct() {
     // 6) Crystals: place CsI(Tl) volumes
     // ------------------------------------------------------------
     G4LogicalVolume* crystalLV = new G4LogicalVolume(holeS, csiTl, "CrystalLV");
-    for(int i=0;i<nX;++i) for(int j=0;j<nY;++j) {
-        G4double x=-detX/2 + cX/2 + i*(cX+gap);
-        G4double y=-detY/2 + cY/2 + j*(cY+gap);
+    for (G4int i = 0; i < nX; ++i) for (G4int j = 0; j < nY; ++j) {
+        G4double x = -detX/2 + cX/2 + i*(cX+gap);
+        G4double y = -detY/2 + cY/2 + j*(cY+gap);
         new G4PVPlacement(
             nullptr,
             G4ThreeVector(x,y,-kCrystalThickness/2 + kZOffset),

@@ -1,8 +1,10 @@
+// SimMessenger.hh
 #ifndef SIM_MESSENGER_H
 #define SIM_MESSENGER_H
 
 #include "G4UImessenger.hh"
 #include "G4UIcmdWith3Vector.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4ThreeVector.hh"
 
 class DetectorConstruction;
@@ -19,6 +21,8 @@ private:
   DetectorConstruction*        fDetector;
   PrimaryGeneratorAction*      fGenerator;
   G4UIcmdWith3Vector*          fOffsetCmd;
+  G4UIcmdWithADoubleAndUnit*   fRotationCmd;  // new rotation command
 };
 
 #endif // SIM_MESSENGER_H
+
