@@ -112,12 +112,14 @@ void analyze_average_hits() {
                 }
             }
             if (maxE <= 0.3) continue;
-            int xb = tree->GetXaxis()->FindBin(xpos[maxIdx]);
-            int yb = tree->GetYaxis()->FindBin(ypos[maxIdx]);
-            // clamp
-            xb = (xb < 0 ? 0 : (xb > nbins+1 ? nbins+1 : xb));
-            yb = (yb < 0 ? 0 : (yb > nbins+1 ? nbins+1 : yb));
-            localCounts[xb][yb] += 1;
+    double xval = xpos[maxIdx];
+    double yval = ypos[maxIdx];
+    int xb = int((xval + halfR) / binW) + 1;
+    int yb = int((yval + halfR) / binW) + 1;
+    xb = xb < 0 ? 0 : (xb > nbins+1 ? nbins+1 : xb);
+    yb = yb < 0 ? 0 : (yb > nbins+1 ? nbins+1 : yb);
+
+    localCounts[xb][yb] += 1;
         }
         file->Close();
 
